@@ -1,1 +1,53 @@
-﻿
+﻿@model IEnumerable<S00127670_CA1.Models.College>
+           <script>
+               $(function () {
+                   $('table tr').click(function () {
+                       var id = this.id;
+                       $.ajax({
+                           type: "GET",
+                           url: '/api/col/getcolinfo/' + id,
+                           contentType: "text/plain; charset-utf-8",
+                           data: id,
+                           dataType: "json",
+                           success: function (data) {
+                               $('#colinfo').empty();
+                               $('#colinfo').append('Name: ' + data.name + '<br>').append('Address: ' + data.addOne + ', ').append(data.addTwo + '<br>').append('Founded: ' + data.found + '<br>').append('Enrollment: ' + data.roll);
+                           }
+                       });
+                   });
+               });
+           </script>
+<h1>Colleges of Ireland</h1>
+<p class="lead">An ASP.NET Web API Application To Display Details of Colleges And Their Location Using Google Maps</p>
+<div class="row">
+    <div class="col-md-3">
+        <div class="panel panel-info">
+            <div class="panel-heading">Colleges</div>
+            <div class="panel-body" style="overflow-x:hidden; height:200px">
+                <table class="table-condensed table-hover" id="coltbl">
+                    
+                        @foreach (var item in Model)
+                        {
+                            <tr style="cursor:pointer" id="@item.id">
+                                <td>
+                                    @item.name
+                                </td>
+                            </tr>
+                        }
+                </table>
+            </div>
+            <div class="panel-footer">
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="panel panel-info">
+            <div class="panel-heading">College Information</div>
+            <div class="panel-body" id="colinfo">
+            </div>
+            <div class="panel-footer">
+            </div>
+        </div>
+
+    </div>
+</div>
