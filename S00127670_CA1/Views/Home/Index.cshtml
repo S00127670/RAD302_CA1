@@ -1,19 +1,20 @@
 ﻿@model IEnumerable<S00127670_CA1.Models.College>
 <script src="~/Scripts/jquery-2.1.3.min.js"></script>
-<script src="http://maps.googleapis.com/maps/api/js?key=AIzaSyDY0kkJiTPVd2U7aTOAwhc9ySH6oHxOIYM&sensor=false"></script>
+<script src="http://maps.googleapis.com/maps/api/js?sensor=false"></script>
            <script>
-               var gmarkers;
+               var geocoder;
                var map;
+               var infowindow = new google.maps.InfoWindow();
                $(function () {
                    google.maps.event.addDomListener(window, 'load', initialize);
                    function initialize() {
                        geocoder = new google.maps.Geocoder();
-                       mapProp = {
-                           center: new google.maps.LatLng(54.96288, -1.593684),
-                           zoom: 4,
-                           mapTypeId: google.maps.MapTypeId.ROADMAP
+                       mapOptions = {
+                           center: new google.maps.LatLng(53.2734, -7.77832031),
+                           zoom: 6,
+                           mapTypeId: 'roadmap'
                        };
-                       map = new google.maps.Map(document.getElementById("map"), mapProp);
+                       displayMap();
                    }
                    toastr.info('Welcome To Colleges of Ireland');
                    $('table tr').click(function () {
@@ -25,27 +26,97 @@
                            data: id,
                            dataType: "json",
                            success: function (data) {
-                               $('#colinfo').empty().append('Name: ' + data.name + '<br>').append('Address: ' + data.addOne + ', ').append(data.addTwo + '<br>').append('Founded: ' + data.found + '<br>').append('Enrollment: ' + data.roll);
-                               geocodeFind(JSON.stringify(data));
+                               $('#colinfo').empty().append('Name: ' + data.name + '<br>').append('Address: ' + data.address + '<br>').append('Founded: ' + data.found + '<br>').append('Enrollment: ' + data.roll + '<br>').append('Sports Teams: ' + data.teams);
+                               geocodeFind(data.address);
+                               displayMap();
                                toastr.info(data.name);
                            }
-
                        });
                    });
+
+                   function geocodeFind(address) {
+                       geocoder.geocode({ 'address': address }, function (results, status) {
+                           if (status == google.maps.GeocoderStatus.OK) {
+                               toastr.success('Address Found!');
+                               map.setCenter(results[0].geometry.location);
+                               map.setZoom(15);
+                               var marker = new google.maps.Marker({
+                                   map: map,
+                                   position: results[0].geometry.location
+                               });
+                           } else {
+                               toastr.warning('Address Not Found!');
+                           }
+                       });
+                   }
+
+                   function displayMap(){
+                       map = new google.maps.Map(document.getElementById("map"), mapOptions);
+                   }
+
+                   var ctx = $("#teamSplit").get(0).getContext("2d");
+                   var data = [
+                           {
+                               value: @(ViewBag.Football),
+                               color: "#FF8000",                 
+                               label: "Football"
+                           },
+                
+                           {
+                               value: @(ViewBag.Hurling),
+                               color: "#008000",
+                               label: "Hurling"
+                           },
+
+                           {
+                               value: @(ViewBag.Soccer),
+                               color: "#0000ff",
+                               label: "Soccer"
+                           },
+
+                           {
+                               value: @(ViewBag.Rugby),
+                               color: "#FF0000",
+                               label: "Rugby"
+                           },
+
+                           {
+                               value: @(ViewBag.Swimming),
+                               color: "#000000",
+                               label: "Swimming"
+                           },
+                   ];
+                   var options = {
+                       //Boolean - Whether we should show a stroke on each segment
+                       segmentShowStroke: true,
+
+                       //String - The colour of each segment stroke
+                       segmentStrokeColor: "#fff",
+
+                       //Number - The width of each segment stroke
+                       segmentStrokeWidth: 2,
+
+                       //Number - The percentage of the chart that we cut out of the middle
+                       percentageInnerCutout: 0, // This is 0 for Pie charts
+
+                       //Number - Amount of animation steps
+                       animationSteps: 100,
+
+                       //String - Animation easing effect
+                       animationEasing: "easeOutBounce",
+
+                       //Boolean - Whether we animate the rotation of the Doughnut
+                       animateRotate: true,
+
+                       //Boolean - Whether we animate scaling the Doughnut from the centre
+                       animateScale: false,
+
+                       //String - A legend template
+                       legendTemplate: "<ul class=\"<%=name.toLowerCase()%>-legend\"><% for (var i=0; i<segments.length; i++){%><li><span style=\"background-color:<%=segments[i].fillColor%>\"></span><%if(segments[i].label){%><%=segments[i].label%><%}%></li><%}%></ul>"
+
+                   };
+                   var teamPie = new Chart(ctx).Pie(data, options);
                });
-               function geocodeFind(address) {
-                   geocoder.geocode({ 'address': address }, function (results, status) {
-                       if (status == google.maps.GeocoderStatus.OK) {
-                           map.setCenter(results[0].geometry.location);
-                           var marker = new google.maps.Marker({
-                               map: map,
-                               position: results[0].geometry.location
-                           });
-                       } else {
-                           toastr.warning('Address Not Found!');
-                       }
-                   });
-               }
            </script>
 <div class="panel panel-info">
     <div class="panel-heading" style="text-align:center; font-size:30px">Colleges of Ireland</div>
@@ -65,7 +136,7 @@
                         {
                             <tr style="cursor:pointer" id="@item.id">
                                 <td>
-                                    @item.name
+                                 @item.name
                                 </td>
                             </tr>
                         }
@@ -81,7 +152,28 @@
             </div>
 
         </div>
-        <div class="col-md-6">
+        <div class="col-md-3">
             <div class="img-thumbnail" id="map" style="width: 650px;height: 400px"></div>
+        </div>
+        <div class="col-xs-2">
+            <a class="label label-info" style="font-size:20px; margin-left:45px">Sports Teams Split</a>
+            <canvas id="teamSplit" style="margin-top:30px"></canvas>
+            <div class="container" style="margin-left:55px; margin-top:20px">
+                <div style="margin-top:10px">
+                    <p class="label" style="background-color:#FF8000; font-size:15px">Football (@ViewBag.Football)</p>
+                </div>
+                <div style="margin-top:10px">
+                    <p class="label" style="background-color:#008000; font-size:15px;">Hurling (@ViewBag.Hurling)</p>
+                </div>
+                <div style="margin-top:10px">
+                    <p class="label" style="background-color:#0000ff; font-size:15px">Soccer (@ViewBag.Soccer)</p>
+                </div>
+                <div style="margin-top:10px">
+                    <p class="label" style="background-color:#FF0000; font-size:15px">Rugby (@ViewBag.Rugby)</p>
+                </div>
+                <div style="margin-top:10px">
+                    <p class="label" style="background-color:#000000; font-size:15px">Swimming (@ViewBag.Swimming)</p>
+                </div>
+            </div>
         </div>
     </div>

@@ -42,9 +42,10 @@ namespace S00127670_CA1.Controllers
         public dynamic GetColInfo(int id)
         {
             College col = db.college.Find(id);
+            Location loco = db.location.Find(id);
             if (col == null)
                 return NotFound();
-            return Ok(new {name=col.name, addOne=col.addressOne, addTwo=col.addressTwo, found=col.founded, roll=col.enrollment});
+            return Ok(new {name=col.name, address=col.address, found=col.founded, roll=col.enrollment, teams=col.sportsTeams.ToString()});
         }
 
         // PUT: api/Colleges/5

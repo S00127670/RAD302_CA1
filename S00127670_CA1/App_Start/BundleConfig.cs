@@ -10,6 +10,7 @@ namespace S00127670_CA1
         {
             bundles.Add(new ScriptBundle("~/bundles/jquery").Include(
                         "~/Scripts/jquery-{version}.js",
+                        "~/Scripts/chart.js",
                          "~/Scripts/toastr.js"));
 
             // Use the development version of Modernizr to develop with and learn from. Then, when you're
